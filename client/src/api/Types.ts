@@ -2,7 +2,7 @@
 export interface SignupParams {
   username: string;
   password: string;
-  email: string;
+  confirmPassword: string;
 }
 
 export interface LoginParams {
