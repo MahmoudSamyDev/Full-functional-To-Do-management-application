@@ -12,11 +12,11 @@ const appRouter = createBrowserRouter([
         element: <AuthLayout />,
         children: [
             {
-                path: "/login",
+                path: "login",
                 element: <Login />,
             },
             {
-                path: "/signup",
+                path: "signup",
                 element: <Signup />,
             },
         ],
@@ -30,10 +30,13 @@ const appRouter = createBrowserRouter([
                 element: <Home />,
             },
             {
-                path: "/boards",
+                path: "boards",
                 element: <Home />,
             },
-            { path: "/boards/:boardId", element: <Board /> },
+            {
+                path: "boards/:boardId",
+                element: <Board />
+            },
         ],
     },
 ]);

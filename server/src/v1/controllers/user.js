@@ -1,13 +1,13 @@
 // Importing required modules
 
 // 1. Importing user module to interact with the database with the user schema
-const User = require('../models/user')
+const User = require('../models/user');
 
 // User Crypto for password encryption.
-const CryptoJS = require('crypto-js')
+const CryptoJS = require('crypto-js');
 
 // Use JWT for token generation.
-const jsonwebtoken = require('jsonwebtoken')
+const jsonwebtoken = require('jsonwebtoken');
 
 // Start Registeration buesness logic
 exports.register = async (req, res) => {
@@ -80,7 +80,7 @@ exports.login = async (req, res) => {
     )
 
     // Returns the user (without password) and token
-    res.status(200).json({ user, token })
+    res.status(200).json({ data: {user, token} })
 
   } catch (err) {
     res.status(500).json(err)

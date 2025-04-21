@@ -31,11 +31,11 @@ const server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-mongoose.connect(process.env.MONGODB_URL).then(() => {
+mongoose.connect(process.env.MONGODB_URI).then(() => {
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
-  console.log(`mongodb connected ${process.env.MONGODB_URL}`)
+  console.log(`mongodb connected ${process.env.MONGODB_URI}`)
 }).catch(err => {
   console.log(err);
   process.exit(1);

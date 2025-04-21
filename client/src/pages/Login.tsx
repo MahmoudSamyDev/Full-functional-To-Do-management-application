@@ -37,10 +37,12 @@ function Login() {
         setLoading(true);
 
         try {
+            console.log("Logging in...");
             const res = await authApi.login({ username, password });
+            console.log(res);
             setLoading(false);
             localStorage.setItem("token", res.data.token);
-            navigate("/");
+            navigate("/boards");
         } catch (err) {
             const errors = (
                 err as { data: { errors: { param: string; msg: string }[] } }
