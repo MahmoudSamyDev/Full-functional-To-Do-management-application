@@ -40,7 +40,7 @@ router.post(
   '/verify-token',
   tokenHandler.verifyToken,
   (req, res) => {
-    res.status(200).json({ user: req.user })
+    res.status(200).json({ user: req.user });
   }
 )
 
