@@ -4,13 +4,13 @@ import { Outlet, useNavigate } from "react-router-dom";
 import authUtils from "../utils/authUtils";
 import Loading from "../components/common/Loading";
 import Sidebar from "../components/common/Sidebar";
-// import { useDispatch } from "react-redux";
-// import { setUser } from "../../redux/features/userSlice";
+import { useDispatch } from "react-redux";
+import { setUser } from "../redux/features/userSlice";
 
 function AppLayout() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
-    // const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -19,12 +19,12 @@ function AppLayout() {
                 navigate("/login");
             } else {
                 // save user
-                // dispatch(setUser(user));
+                dispatch(setUser(user));
                 setLoading(false);
             }
         };
         checkAuth();
-    }, [navigate]);
+    }, [navigate, dispatch]);
 
     return loading ? (
         <Loading fullHeight />

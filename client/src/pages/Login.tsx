@@ -1,7 +1,6 @@
 import { Box, Button, TextField } from "@mui/material";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import LoadingButton from "@mui/lab/LoadingButton";
 import authApi from "../api/authApi";
 import { LoginForm } from "./Types";
 
@@ -90,7 +89,7 @@ function Login() {
                     error={passwordErrText !== ""}
                     helperText={passwordErrText}
                 />
-                <LoadingButton
+                <Button
                     sx={{ mt: 3, mb: 2 }}
                     variant="outlined"
                     fullWidth
@@ -99,7 +98,7 @@ function Login() {
                     loading={loading}
                 >
                     Login
-                </LoadingButton>
+                </Button>
             </Box>
             <Button
                 component={Link}

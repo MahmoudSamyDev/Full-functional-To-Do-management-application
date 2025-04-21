@@ -6,8 +6,6 @@ import CssBaseLine from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { RouterProvider } from "react-router-dom";
 import appRouter from "./routes";
-import "./App.css";
-
 
 function App() {
     const theme = createTheme({
