@@ -95,9 +95,9 @@ function Login() {
                     fullWidth
                     color="success"
                     type="submit"
-                    loading={loading}
+                    disabled={loading}
                 >
-                    Login
+                    {loading ? "Logging in..." : "Login"}
                 </Button>
             </Box>
             <Button

@@ -48,7 +48,7 @@ function Sidebar() {
     useEffect(() => {
         const getBoards = async () => {
             try {
-                const res: Board_TP[] = (await boardApi.getAll()).data;
+                const res: Board_TP[] = await boardApi.getAll();
                 dispatch(setBoards(res));
             } catch (err) {
                 alert(err);
@@ -58,9 +58,9 @@ function Sidebar() {
     }, [dispatch]);
 
     useEffect(() => {
-        const activeItem = boards?.findIndex((e) => e.id === boardId);
+        const activeItem = boards?.findIndex((e) => e._id === boardId);
         if (boards?.length > 0 && boardId === undefined) {
-            navigate(`/boards/${boards[0]?.id}`);
+            navigate(`/boards/${boards[0]?._id}`);
         }
         setActiveIndex(activeItem);
     }, [boards, boardId, navigate]);
@@ -72,10 +72,11 @@ function Sidebar() {
 
     async function addBoard() {
         try {
-            const res: Board_TP = (await boardApi.create()).data;
+            const res: Board_TP = await boardApi.create();
+            console.log(res);
             const newList = [res, ...boards];
             dispatch(setBoards(newList));
-            navigate(`/boards/${res.id}`);
+            navigate(`/boards/${res._id}`);
         } catch (err) {
             alert(err);
         }
@@ -88,19 +89,19 @@ function Sidebar() {
 
         if (!over || active.id === over.id) return;
 
-        const oldIndex = boards.findIndex((item) => item.id === active.id);
-        const newIndex = boards.findIndex((item) => item.id === over.id);
+        const oldIndex = boards.findIndex((item) => item._id === active.id);
+        const newIndex = boards.findIndex((item) => item._id === over.id);
 
         const newList = arrayMove(boards, oldIndex, newIndex);
         dispatch(setBoards(newList));
 
         try {
-            await boardApi.updatePosition({ boards: newList });
+            await boardApi.updatePosition({ boards: newList.map(b => b._id) });
         } catch (err) {
             alert(err);
         }
 
-        const newActiveIndex = newList.findIndex((e) => e.id === boardId);
+        const newActiveIndex = newList.findIndex((e) => e._id === boardId);
         setActiveIndex(newActiveIndex);
     };
 
@@ -164,13 +165,13 @@ function Sidebar() {
                 >
                     <SortableContext
                         items={
-                            Array.isArray(boards) ? boards.map((b) => b.id) : []
+                            Array.isArray(boards) ? boards.map((b) => b._id) : []
                         }
                         strategy={verticalListSortingStrategy}
                     >
                         {boards?.map((item, index) => (
                             <SortableBoardItem
-                                key={item.id}
+                                key={item._id}
                                 item={item}
                                 isActive={index === activeIndex}
                             />

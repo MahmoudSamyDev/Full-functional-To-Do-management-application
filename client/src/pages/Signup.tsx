@@ -5,7 +5,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import authApi from "../api/authApi";
 import { SignupForm } from "./Types";
 
-const Signup = () => {
+function Signup() {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);

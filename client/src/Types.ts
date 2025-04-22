@@ -1,5 +1,9 @@
 export interface Board_TP {
-  id: string;
-  title: string;
-  icon?: string;
+    _id: string;
+    title: string;
+    description?: string;
+    favourite: boolean;
+    position: number;
+    createdAt: string;
+    updatedAt: string;
 }
