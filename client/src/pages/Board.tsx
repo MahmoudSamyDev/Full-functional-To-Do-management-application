@@ -20,8 +20,11 @@ function Board() {
     const [description, setDescription] = useState("");
     const [sections, setSections] = useState<Section[]>([]);
 
-    const boards = useSelector((state: RootState) => state.board.value) as Board_TP[];
+    const boards = useSelector(
+        (state: RootState) => state.board.value
+    ) as Board_TP[];
 
+    // Get all fetched board data
     useEffect(() => {
         const getBoard = async () => {
             try {
@@ -36,7 +39,7 @@ function Board() {
         getBoard();
     }, [boardId]);
 
-    const updateTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    function updateTitle(e: React.ChangeEvent<HTMLInputElement>) {
         clearTimeout(timer);
         const newTitle = e.target.value;
         setTitle(newTitle);
@@ -55,23 +58,25 @@ function Board() {
                 alert("Failed to update title.");
             }
         }, timeout);
-    };
+    }
 
-    const updateDescription = (e: React.ChangeEvent<HTMLInputElement>) => {
+    function updateDescription(e: React.ChangeEvent<HTMLInputElement>) {
         clearTimeout(timer);
         const newDescription = e.target.value;
         setDescription(newDescription);
 
         timer = setTimeout(async () => {
             try {
-                await boardApi.update(`${boardId}`, { description: newDescription });
+                await boardApi.update(`${boardId}`, {
+                    description: newDescription,
+                });
             } catch {
                 alert("Failed to update description.");
             }
         }, timeout);
-    };
+    }
 
-    const deleteBoard = async () => {
+    async function deleteBoard() {
         try {
             await boardApi.delete(`${boardId}`);
             const newList = boards.filter((e) => e._id !== boardId);
@@ -84,7 +89,7 @@ function Board() {
         } catch {
             alert("Failed to delete board.");
         }
-    };
+    }
 
     return (
         <>

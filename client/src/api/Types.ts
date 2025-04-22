@@ -15,7 +15,6 @@ export interface Board {
   _id: string;
   title: string;
   description?: string;
-  favourite: boolean;
   position: number;
   createdAt: string;
   updatedAt: string;
@@ -29,7 +28,6 @@ export interface UpdateBoardPositionParams {
 export interface UpdateBoardParams {
   title?: string;
   description?: string;
-  favourite?: boolean;
   position?: number;
 }
 

@@ -15,6 +15,8 @@ import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import taskApi from "../../api/taskApi";
 import { Task } from "../../api/Types";
+import type { Editor as CKEditorType } from "@ckeditor/ckeditor5-core";
+import { Editor as ClassicEditorType } from "@ckeditor/ckeditor5-core";
 
 const modalStyle = {
     outline: "none",
@@ -113,8 +115,7 @@ const TaskModal = ({
         }, 500);
     };
 
-    const handleContentChange = async (_: unknown, editor: ClassicEditor) => {
-        clearTimeout(timer);
+    const handleContentChange = async (_: unknown, editor: CKEditorType) => {
         const newContent = editor.getData();
 
         if (!task || isModalClosed) return;
@@ -203,9 +204,8 @@ const TaskModal = ({
                                 overflowY: "auto",
                             }}
                         >
-                            <CKEditor
-                                /* eslint-disable @typescript-eslint/no-explicit-any */
-                                editor={ClassicEditor as any}
+                            <CKEditor<ClassicEditorType>
+                                editor={ClassicEditor}
                                 data={content}
                                 onChange={handleContentChange}
                                 onFocus={updateEditorHeight}

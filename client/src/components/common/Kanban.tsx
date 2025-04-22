@@ -133,7 +133,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         }, timeout);
     };
 
-    const createTask = async (sectionId: string) => {
+    async function createTask (sectionId: string) {
         try {
             const task = await taskApi.create(boardId, {
                 columnId: sectionId,
@@ -207,7 +207,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                                     maxWidth: "300px",
                                     marginRight: "10px",
                                     padding: "10px",
-                                    background: "#f9f9f9",
                                     borderRadius: "8px",
                                 }}
                             >
