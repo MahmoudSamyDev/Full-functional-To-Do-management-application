@@ -204,6 +204,7 @@ const TaskModal = ({
                             }}
                         >
                             <CKEditor
+                                /* eslint-disable @typescript-eslint/no-explicit-any */
                                 editor={ClassicEditor as any}
                                 data={content}
                                 onChange={handleContentChange}
