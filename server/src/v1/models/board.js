@@ -25,14 +25,6 @@ const boardSchema = new Schema({
   position: {
     type: Number
   },
-  favourite: {
-    type: Boolean,
-    default: false
-  },
-  favouritePosition: {
-    type: Number,
-    default: 0
-  }
 }, schemaOptions)
 
 module.exports = mongoose.model('Board', boardSchema)

@@ -16,7 +16,7 @@ function SortableBoardItem({ item, isActive }: Props) {
         setNodeRef,
         transform,
         transition
-    } = useSortable({ id: item.id });
+    } = useSortable({ id: item._id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -30,7 +30,7 @@ function SortableBoardItem({ item, isActive }: Props) {
             {...listeners}
             selected={isActive}
             component={Link}
-            to={`/boards/${item.id}`}
+            to={`/boards/${item._id}`}
             sx={{
                 pl: "20px",
                 cursor: "grab",
@@ -46,7 +46,7 @@ function SortableBoardItem({ item, isActive }: Props) {
                     textOverflow: "ellipsis",
                 }}
             >
-                {item.icon} {item.title}
+                {item.title}
             </Typography>
         </ListItemButton>
     );
