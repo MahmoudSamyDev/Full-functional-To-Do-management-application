@@ -1,3 +1,4 @@
+import TaskTitleModal from "./TaskTitleModal";
 import {
     Box,
     Button,
@@ -23,7 +24,6 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import sectionApi from "../../api/sectionApi";
 import taskApi from "../../api/taskApi";
-import TaskModal from "./TaskModal";
 import { Section, Task } from "../../api/Types";
 import SortableTaskCard from "./SortableTaskCard";
 
@@ -37,10 +37,10 @@ interface KanbanProps {
 
 function Kanban({ boardId, data: initialSections }: KanbanProps) {
     const [data, setData] = useState<Section[]>([]);
-    const [selectedTask, setSelectedTask] = useState<Task | undefined>(
-        undefined
-    );
     const sensors = useSensors(useSensor(PointerSensor));
+
+    const [titleModalOpen, setTitleModalOpen] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
     useEffect(() => {
         setData(initialSections);
@@ -132,6 +132,15 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         }, timeout);
     };
 
+    const updateTaskTitle = async (taskId: string, newTitle: string) => {
+    try {
+        await taskApi.update(boardId, taskId, { title: newTitle });
+    } catch {
+        alert("Failed to update task title");
+    }
+};
+
+
     async function createTask(sectionId: string) {
         try {
             const task = await taskApi.create(boardId, {
@@ -147,26 +156,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         }
     }
 
-    const onUpdateTask = (task: Task) => {
-        const newData = [...data];
-        const sectionIndex = newData.findIndex((e) => e._id === task.board);
-        const taskIndex = newData[sectionIndex].tasks.findIndex(
-            (t) => t._id === task._id
-        );
-        newData[sectionIndex].tasks[taskIndex] = task;
-        setData(newData);
-    };
-
-    const onDeleteTask = (task: Task) => {
-        const newData = [...data];
-        const sectionIndex = newData.findIndex((e) => e._id === task.board);
-        const taskIndex = newData[sectionIndex].tasks.findIndex(
-            (t) => t._id === task._id
-        );
-        newData[sectionIndex].tasks.splice(taskIndex, 1);
-        setData(newData);
-    };
-
     return (
         <>
             <Box
@@ -180,6 +169,40 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                 </Typography>
             </Box>
             <Divider sx={{ my: 1 }} />
+            {taskToEdit && (
+                <TaskTitleModal
+                    open={titleModalOpen}
+                    initialTitle={taskToEdit.title}
+                    onClose={() => setTitleModalOpen(false)}
+                    onSave={async (newTitle) => {
+                        if (!taskToEdit) return;
+                    
+                        // 1. Optimistically update local data
+                        const updatedData = data.map((section) => {
+                            if (section._id !== taskToEdit.board) return section;
+                            return {
+                                ...section,
+                                tasks: section.tasks.map((task) =>
+                                    task._id === taskToEdit._id
+                                        ? { ...task, title: newTitle } // update the title directly
+                                        : task
+                                ),
+                            };
+                        });
+                    
+                        setData(updatedData);
+                    
+                        // 2. Backend update
+                        await updateTaskTitle(taskToEdit._id, newTitle);
+                    
+                        // 3. Important: Close the modal only AFTER updating local and backend state
+                        setTitleModalOpen(false);
+                        setTaskToEdit(null);
+                    }}
+                    
+                    
+                />
+            )}
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
@@ -250,7 +273,10 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                                     <SortableTaskCard
                                         key={task._id}
                                         task={task}
-                                        onClick={() => setSelectedTask(task)}
+                                        onEditTitle={(task) => {
+                                            setTaskToEdit(task);
+                                            setTitleModalOpen(true);
+                                        }}
                                     />
                                 ))}
                             </Box>
@@ -258,14 +284,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                     ))}
                 </Box>
             </DndContext>
-
-            <TaskModal
-                task={selectedTask}
-                boardId={boardId}
-                onClose={() => setSelectedTask(undefined)}
-                onUpdate={onUpdateTask}
-                onDelete={onDeleteTask}
-            />
         </>
     );
 }
