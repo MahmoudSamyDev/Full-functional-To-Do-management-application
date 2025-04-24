@@ -46,7 +46,7 @@ export interface Task {
 export interface CreateTaskParams {
   title: string;
   content?: string;
-  columnId: string;
+  sectionId: string;
 }
 
 export interface UpdateTaskParams {

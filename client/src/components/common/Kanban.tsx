@@ -136,7 +136,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
     async function createTask (sectionId: string) {
         try {
             const task = await taskApi.create(boardId, {
-                columnId: sectionId,
+                sectionId,
                 title: "",
             });
             const newData = [...data];
