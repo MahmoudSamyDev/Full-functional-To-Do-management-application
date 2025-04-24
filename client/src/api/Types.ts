@@ -58,8 +58,8 @@ export interface UpdateTaskParams {
 export interface UpdateTaskPositionParams {
   resourceColumnId: string;
   destinationColumnId: string;
-  resourceTask: Task[];
-  destinationTask: Task[];
+  resourceList: Task[];
+  destinationList: Task[];
 }
 
 // types.ts (add this if not already there)

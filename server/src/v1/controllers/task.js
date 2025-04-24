@@ -61,7 +61,7 @@ exports.updatePosition = async (req, res) => {
     if (resourceSectionId !== destinationSectionId) {
       for (const key in resourceListReverse) {
         await Task.findByIdAndUpdate(
-          resourceListReverse[key].id,
+          resourceListReverse[key]._id,
           {
             $set: {
               section: resourceSectionId,
@@ -73,7 +73,7 @@ exports.updatePosition = async (req, res) => {
     }
     for (const key in destinationListReverse) {
       await Task.findByIdAndUpdate(
-        destinationListReverse[key].id,
+        destinationListReverse[key]._id,
         {
           $set: {
             section: destinationSectionId,

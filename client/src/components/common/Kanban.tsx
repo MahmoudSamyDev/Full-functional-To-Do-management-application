@@ -50,43 +50,42 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
-        const sectionIndex = data.findIndex((section) =>
-            section.tasks.find((task) => task._id === active.id)
+        const sourceSectionIndex = data.findIndex((section) =>
+            section.tasks.some((task) => task._id === active.id)
         );
-
         const targetSectionIndex = data.findIndex((section) =>
-            section.tasks.find((task) => task._id === over.id)
+            section.tasks.some((task) => task._id === over.id)
         );
 
-        if (sectionIndex === -1 || targetSectionIndex === -1) return;
+        if (sourceSectionIndex === -1 || targetSectionIndex === -1) return;
 
-        const sourceSection = data[sectionIndex];
+        const sourceSection = data[sourceSectionIndex];
         const targetSection = data[targetSectionIndex];
 
         const activeTaskIndex = sourceSection.tasks.findIndex(
-            (t) => t._id === active.id
+            (task) => task._id === active.id
         );
         const overTaskIndex = targetSection.tasks.findIndex(
-            (t) => t._id === over.id
+            (task) => task._id === over.id
         );
 
-        const sourceTasks = [...sourceSection.tasks];
-        const destinationTasks = [...targetSection.tasks];
+        const updatedSourceTasks = [...sourceSection.tasks];
+        const updatedTargetTasks = [...targetSection.tasks];
 
-        const [movedTask] = sourceTasks.splice(activeTaskIndex, 1);
-        destinationTasks.splice(overTaskIndex, 0, movedTask);
+        const [movedTask] = updatedSourceTasks.splice(activeTaskIndex, 1);
+        updatedTargetTasks.splice(overTaskIndex, 0, movedTask);
 
         const newData = [...data];
-        newData[sectionIndex].tasks = sourceTasks;
-        newData[targetSectionIndex].tasks = destinationTasks;
+        newData[sourceSectionIndex].tasks = updatedSourceTasks;
+        newData[targetSectionIndex].tasks = updatedTargetTasks;
         setData(newData);
 
         try {
             await taskApi.updatePosition(boardId, {
                 resourceColumnId: sourceSection._id,
                 destinationColumnId: targetSection._id,
-                resourceTask: sourceTasks,
-                destinationTask: destinationTasks,
+                resourceList: updatedSourceTasks,
+                destinationList: updatedTargetTasks,
             });
         } catch {
             alert("Failed to update task position");
@@ -133,7 +132,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         }, timeout);
     };
 
-    async function createTask (sectionId: string) {
+    async function createTask(sectionId: string) {
         try {
             const task = await taskApi.create(boardId, {
                 sectionId,
@@ -146,7 +145,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         } catch {
             alert("Failed to create task");
         }
-    };
+    }
 
     const onUpdateTask = (task: Task) => {
         const newData = [...data];

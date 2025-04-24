@@ -21,7 +21,10 @@ const app = express();
 // Middleware Setup
 
 // CORS (Cross-Origin Resource Sharing): Needed if your frontend (React) runs on a different port (like localhost:5173) than your backend (like localhost:3000).
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 
 // Morgan logs requests like GET /api/tasks 200 12ms in development mode.
 app.use(logger('dev'));
