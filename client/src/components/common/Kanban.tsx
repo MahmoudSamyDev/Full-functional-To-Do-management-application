@@ -49,56 +49,57 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
-        let sourceSection: Section | null = null;
-        let destinationSection: Section | null = null;
+        const activeId = active.id;
+        const overId = over.id;
+
+        let sourceSectionId: string | null = null;
+        let destinationSectionId: string | null = null;
         let movedTask: Task | null = null;
 
         for (const section of data) {
-            const found = section.tasks.find((t) => t._id === active.id);
-            if (found) {
-                sourceSection = section;
-                movedTask = found;
+            if (section.tasks.find((t) => t._id === activeId)) {
+                sourceSectionId = section._id;
+                movedTask =
+                    section.tasks.find((t) => t._id === activeId) || null;
             }
-            if (section.tasks.find((t) => t._id === over.id)) {
-                destinationSection = section;
+            if (section.tasks.find((t) => t._id === overId)) {
+                destinationSectionId = section._id;
             }
         }
 
-        if (!sourceSection || !destinationSection || !movedTask) return;
+        if (!sourceSectionId || !destinationSectionId || !movedTask) return;
 
-        const newData = data.map((section) => {
-            if (section._id === sourceSection!._id) {
-                return {
-                    ...section,
-                    tasks: section.tasks.filter((t) => t._id !== active.id),
-                };
-            }
-            if (section._id === destinationSection!._id) {
-                const overIndex = section.tasks.findIndex(
-                    (t) => t._id === over.id
-                );
-                const updated = [...section.tasks];
-                updated.splice(overIndex, 0, movedTask!);
-                return {
-                    ...section,
-                    tasks: updated,
-                };
-            }
-            return section;
-        });
+        const updatedData = [...data];
 
-        setData(newData);
+        const sourceSectionIndex = updatedData.findIndex(
+            (s) => s._id === sourceSectionId
+        );
+        const destinationSectionIndex = updatedData.findIndex(
+            (s) => s._id === destinationSectionId
+        );
+
+        const sourceTasks = [...updatedData[sourceSectionIndex].tasks].filter(
+            (t) => t._id !== activeId
+        );
+        const destinationTasks = [
+            ...updatedData[destinationSectionIndex].tasks,
+        ];
+        const overIndex = destinationTasks.findIndex((t) => t._id === overId);
+
+        // insert at right place
+        destinationTasks.splice(overIndex, 0, movedTask);
+
+        updatedData[sourceSectionIndex].tasks = sourceTasks;
+        updatedData[destinationSectionIndex].tasks = destinationTasks;
+
+        setData(updatedData);
 
         try {
             await taskApi.updatePosition(boardId, {
-                resourceColumnId: sourceSection._id,
-                destinationColumnId: destinationSection._id,
-                resourceList:
-                    newData.find((s) => s._id === sourceSection._id)?.tasks ??
-                    [],
-                destinationList:
-                    newData.find((s) => s._id === destinationSection._id)
-                        ?.tasks ?? [],
+                resourceColumnId: sourceSectionId,
+                destinationColumnId: destinationSectionId,
+                resourceList: sourceTasks,
+                destinationList: destinationTasks,
             });
         } catch {
             alert("Failed to update task position");
@@ -150,7 +151,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
             const updatedTask = await taskApi.update(boardId, taskId, {
                 title: newTitle,
             });
-            // Optionally update the state with the backend response
             setData((prevData) =>
                 prevData.map((section) => {
                     if (section._id !== updatedTask.board) return section;
@@ -216,7 +216,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                             })
                         );
 
-                        // Send the update to the backend
                         try {
                             await updateTaskTitle(taskToEdit._id, newTitle);
                             setTitleModalOpen(false);
@@ -232,20 +231,21 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                 collisionDetection={closestCorners}
                 onDragEnd={onDragEnd}
             >
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        width: "calc(100vw - 400px)",
-                        overflowX: "auto",
-                    }}
+                <SortableContext
+                    items={data.flatMap((section) =>
+                        section.tasks.map((task) => task._id)
+                    )}
+                    strategy={verticalListSortingStrategy}
                 >
-                    {data.map((section) => (
-                        <SortableContext
-                            key={section._id}
-                            items={section.tasks.map((task) => task._id)}
-                            strategy={verticalListSortingStrategy}
-                        >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            width: "calc(100vw - 400px)",
+                            overflowX: "auto",
+                        }}
+                    >
+                        {data.map((section) => (
                             <Box
                                 key={section._id}
                                 sx={{
@@ -270,7 +270,9 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                                                 padding: 0,
                                             },
                                             "& .MuiOutlinedInput-notchedOutline":
-                                                { border: "unset" },
+                                                {
+                                                    border: "unset",
+                                                },
                                             "& .MuiOutlinedInput-root": {
                                                 fontSize: "1rem",
                                                 fontWeight: "700",
@@ -304,9 +306,9 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                                     />
                                 ))}
                             </Box>
-                        </SortableContext>
-                    ))}
-                </Box>
+                        ))}
+                    </Box>
+                </SortableContext>
             </DndContext>
         </>
     );

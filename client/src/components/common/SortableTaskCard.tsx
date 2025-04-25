@@ -35,7 +35,7 @@ const SortableTaskCard = ({ task, onEditTitle }: Props) => {
             sx={style}
             onDoubleClick={() => onEditTitle(task)}
         >
-            <div>{task.title}</div>
+            <div>{task?.title ? task.title : "Un titled"}</div>
         </Card>
     );
 };

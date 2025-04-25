@@ -35,7 +35,7 @@ exports.delete = async (req, res) => {
   try {
     const currentTask = await Task.findById(taskId)
     await Task.deleteOne({ _id: taskId })
-    const tasks = await Task.find({ section: currentTask.section }).sort('postition')
+    const tasks = await Task.find({ section: currentTask.section }).sort('position')
     for (const key in tasks) {
       await Task.findByIdAndUpdate(
         tasks[key].id,
@@ -52,38 +52,35 @@ exports.updatePosition = async (req, res) => {
   const {
     resourceList,
     destinationList,
-    resourceSectionId,
-    destinationSectionId
-  } = req.body
-  const resourceListReverse = resourceList.reverse()
-  const destinationListReverse = destinationList.reverse()
+    resourceColumnId,
+    destinationColumnId
+  } = req.body;
+
   try {
-    if (resourceSectionId !== destinationSectionId) {
-      for (const key in resourceListReverse) {
-        await Task.findByIdAndUpdate(
-          resourceListReverse[key]._id,
-          {
-            $set: {
-              section: resourceSectionId,
-              position: key
-            }
+    // If task was moved to another section, update its section + position
+    if (resourceColumnId !== destinationColumnId) {
+      for (let i = 0; i < resourceList.length; i++) {
+        await Task.findByIdAndUpdate(resourceList[i]._id, {
+          $set: {
+            section: resourceColumnId,
+            position: i
           }
-        )
+        });
       }
     }
-    for (const key in destinationListReverse) {
-      await Task.findByIdAndUpdate(
-        destinationListReverse[key]._id,
-        {
-          $set: {
-            section: destinationSectionId,
-            position: key
-          }
+
+    // Always update destination positions
+    for (let i = 0; i < destinationList.length; i++) {
+      await Task.findByIdAndUpdate(destinationList[i]._id, {
+        $set: {
+          section: destinationColumnId,
+          position: i
         }
-      )
+      });
     }
-    res.status(200).json('updated')
+
+    res.status(200).json("updated");
   } catch (err) {
-    res.status(500).json(err)
+    res.status(500).json(err);
   }
-}
+};
