@@ -8,18 +8,6 @@ import {
     IconButton,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import {
-    DndContext,
-    DragEndEvent,
-    closestCorners,
-    PointerSensor,
-    useSensor,
-    useSensors,
-} from "@dnd-kit/core";
-import {
-    SortableContext,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import sectionApi from "../../api/sectionApi";
@@ -37,7 +25,6 @@ interface KanbanProps {
 
 function Kanban({ boardId, data: initialSections }: KanbanProps) {
     const [data, setData] = useState<Section[]>([]);
-    const sensors = useSensors(useSensor(PointerSensor));
     const [titleModalOpen, setTitleModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
@@ -45,66 +32,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         setData(initialSections);
     }, [initialSections]);
 
-    const onDragEnd = async (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-
-        const activeId = active.id;
-        const overId = over.id;
-
-        let sourceSectionId: string | null = null;
-        let destinationSectionId: string | null = null;
-        let movedTask: Task | null = null;
-
-        for (const section of data) {
-            if (section.tasks.find((t) => t._id === activeId)) {
-                sourceSectionId = section._id;
-                movedTask =
-                    section.tasks.find((t) => t._id === activeId) || null;
-            }
-            if (section.tasks.find((t) => t._id === overId)) {
-                destinationSectionId = section._id;
-            }
-        }
-
-        if (!sourceSectionId || !destinationSectionId || !movedTask) return;
-
-        const updatedData = [...data];
-
-        const sourceSectionIndex = updatedData.findIndex(
-            (s) => s._id === sourceSectionId
-        );
-        const destinationSectionIndex = updatedData.findIndex(
-            (s) => s._id === destinationSectionId
-        );
-
-        const sourceTasks = [...updatedData[sourceSectionIndex].tasks].filter(
-            (t) => t._id !== activeId
-        );
-        const destinationTasks = [
-            ...updatedData[destinationSectionIndex].tasks,
-        ];
-        const overIndex = destinationTasks.findIndex((t) => t._id === overId);
-
-        // insert at right place
-        destinationTasks.splice(overIndex, 0, movedTask);
-
-        updatedData[sourceSectionIndex].tasks = sourceTasks;
-        updatedData[destinationSectionIndex].tasks = destinationTasks;
-
-        setData(updatedData);
-
-        try {
-            await taskApi.updatePosition(boardId, {
-                resourceColumnId: sourceSectionId,
-                destinationColumnId: destinationSectionId,
-                resourceList: sourceTasks,
-                destinationList: destinationTasks,
-            });
-        } catch {
-            alert("Failed to update task position");
-        }
-    };
 
     const createSection = async () => {
         try {
@@ -160,8 +87,10 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                     return { ...section, tasks: updatedTasks };
                 })
             );
+            return true;
         } catch {
             alert("Failed to update task title");
+            return false;
         }
     };
 
@@ -169,7 +98,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         try {
             const task = await taskApi.create(boardId, {
                 sectionId,
-                title: "",
+                title: "New Task",
             });
             const newData = [...data];
             const index = newData.findIndex((e) => e._id === sectionId);
@@ -177,6 +106,21 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
             setData(newData);
         } catch {
             alert("Failed to create task");
+        }
+    }
+
+    async function deleteTask(taskId: string) {
+        console.log("Deleting task with ID:", taskId);
+        try {
+            await taskApi.delete(boardId, taskId);
+            setData((prevData) =>
+                prevData.map((section) => ({
+                    ...section,
+                    tasks: section.tasks.filter((task) => task._id !== taskId),
+                }))
+            );
+        } catch {
+            alert("Failed to delete task");
         }
     }
 
@@ -197,47 +141,21 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                 <TaskTitleModal
                     open={titleModalOpen}
                     initialTitle={taskToEdit.title}
-                    onClose={() => setTitleModalOpen(false)}
+                    onClose={() => {
+                        setTitleModalOpen(false);
+                        setTaskToEdit(null);
+                    }}
                     onSave={async (newTitle) => {
                         if (!taskToEdit) return;
-
-                        setData((prevData) =>
-                            prevData.map((section) => {
-                                if (section._id !== taskToEdit.board)
-                                    return section;
-
-                                const updatedTasks = section.tasks.map((task) =>
-                                    task._id === taskToEdit._id
-                                        ? { ...task, title: newTitle }
-                                        : task
-                                );
-
-                                return { ...section, tasks: updatedTasks };
-                            })
-                        );
-
-                        try {
-                            await updateTaskTitle(taskToEdit._id, newTitle);
+                        const success = await updateTaskTitle(taskToEdit._id, newTitle);
+                        if (success) {
                             setTitleModalOpen(false);
                             setTaskToEdit(null);
-                        } catch {
-                            alert("Failed to update task title");
                         }
                     }}
                 />
             )}
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCorners}
-                onDragEnd={onDragEnd}
-            >
-                <SortableContext
-                    items={data.flatMap((section) =>
-                        section.tasks.map((task) => task._id)
-                    )}
-                    strategy={verticalListSortingStrategy}
-                >
-                    <Box
+            <Box
                         sx={{
                             display: "flex",
                             alignItems: "flex-start",
@@ -303,15 +221,13 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                                             setTaskToEdit(task);
                                             setTitleModalOpen(true);
                                         }}
+                                        onDelete={deleteTask}
                                     />
                                 ))}
                             </Box>
                         ))}
                     </Box>
-                </SortableContext>
-            </DndContext>
         </>
     );
 }
-
 export default Kanban;

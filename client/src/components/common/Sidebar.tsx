@@ -15,19 +15,6 @@ import {
     ListItem,
     Typography,
 } from "@mui/material";
-import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import SortableBoardItem from "./SortableBoardItem";
 import { Board_TP } from "../../Types";
 
@@ -68,7 +55,7 @@ function Sidebar() {
     function logout() {
         localStorage.removeItem("token");
         navigate("/login");
-    };
+    }
 
     async function addBoard() {
         try {
@@ -80,30 +67,7 @@ function Sidebar() {
         } catch (err) {
             alert(err);
         }
-    };
-
-    const sensors = useSensors(useSensor(PointerSensor));
-
-    async function handleDragEnd (event: DragEndEvent) {
-        const { active, over } = event;
-
-        if (!over || active.id === over.id) return;
-
-        const oldIndex = boards.findIndex((item) => item._id === active.id);
-        const newIndex = boards.findIndex((item) => item._id === over.id);
-
-        const newList = arrayMove(boards, oldIndex, newIndex);
-        dispatch(setBoards(newList));
-
-        try {
-            await boardApi.updatePosition({ boards: newList.map(b => b._id) });
-        } catch (err) {
-            alert(err);
-        }
-
-        const newActiveIndex = newList.findIndex((e) => e._id === boardId);
-        setActiveIndex(newActiveIndex);
-    };
+    }
 
     return (
         <Drawer
@@ -158,26 +122,13 @@ function Sidebar() {
                         </IconButton>
                     </Box>
                 </ListItem>
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext
-                        items={
-                            Array.isArray(boards) ? boards.map((b) => b._id) : []
-                        }
-                        strategy={verticalListSortingStrategy}
-                    >
-                        {boards?.map((item, index) => (
-                            <SortableBoardItem
-                                key={item._id}
-                                item={item}
-                                isActive={index === activeIndex}
-                            />
-                        ))}
-                    </SortableContext>
-                </DndContext>
+                {boards?.map((item, index) => (
+                    <SortableBoardItem
+                        key={item._id}
+                        item={item}
+                        isActive={index === activeIndex}
+                    />
+                ))}
             </List>
         </Drawer>
     );
