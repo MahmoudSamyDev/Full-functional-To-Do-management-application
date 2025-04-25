@@ -13,6 +13,7 @@ const TaskTitleModal = ({ open, onClose, onSave, initialTitle }: Props) => {
 
     useEffect(() => {
         setTitle(initialTitle);
+        console.log("Modal opened");
     }, [initialTitle]);
 
     const handleSave = () => {

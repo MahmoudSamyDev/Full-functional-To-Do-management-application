@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, TextField } from "@mui/material";
+import { Card } from "@mui/material";
 import { Task } from "../../api/Types";
 
 interface Props {
@@ -27,32 +27,15 @@ const SortableTaskCard = ({ task, onEditTitle }: Props) => {
         padding: "10px",
     };
 
-    const stopPropagation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-    };
-
     return (
         <Card
             ref={setNodeRef}
             {...attributes}
             {...listeners}
             sx={style}
-            onDoubleClick={() => onEditTitle(task)} // 👈 Double click to edit
+            onDoubleClick={() => onEditTitle(task)}
         >
-            <TextField
-                value={task.title}
-                onClick={stopPropagation} // ✅ prevent opening modal when editing
-                placeholder="Untitled"
-                variant="standard"
-                fullWidth
-                InputProps={{
-                    disableUnderline: true,
-                    sx: {
-                        fontWeight: 600,
-                        fontSize: "0.9rem",
-                    },
-                }}
-            />
+            <div>{task.title}</div>
         </Card>
     );
 };

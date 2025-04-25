@@ -38,7 +38,6 @@ interface KanbanProps {
 function Kanban({ boardId, data: initialSections }: KanbanProps) {
     const [data, setData] = useState<Section[]>([]);
     const sensors = useSensors(useSensor(PointerSensor));
-
     const [titleModalOpen, setTitleModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
@@ -50,42 +49,56 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
-        const sourceSectionIndex = data.findIndex((section) =>
-            section.tasks.some((task) => task._id === active.id)
-        );
-        const targetSectionIndex = data.findIndex((section) =>
-            section.tasks.some((task) => task._id === over.id)
-        );
+        let sourceSection: Section | null = null;
+        let destinationSection: Section | null = null;
+        let movedTask: Task | null = null;
 
-        if (sourceSectionIndex === -1 || targetSectionIndex === -1) return;
+        for (const section of data) {
+            const found = section.tasks.find((t) => t._id === active.id);
+            if (found) {
+                sourceSection = section;
+                movedTask = found;
+            }
+            if (section.tasks.find((t) => t._id === over.id)) {
+                destinationSection = section;
+            }
+        }
 
-        const sourceSection = data[sourceSectionIndex];
-        const targetSection = data[targetSectionIndex];
+        if (!sourceSection || !destinationSection || !movedTask) return;
 
-        const activeTaskIndex = sourceSection.tasks.findIndex(
-            (task) => task._id === active.id
-        );
-        const overTaskIndex = targetSection.tasks.findIndex(
-            (task) => task._id === over.id
-        );
+        const newData = data.map((section) => {
+            if (section._id === sourceSection!._id) {
+                return {
+                    ...section,
+                    tasks: section.tasks.filter((t) => t._id !== active.id),
+                };
+            }
+            if (section._id === destinationSection!._id) {
+                const overIndex = section.tasks.findIndex(
+                    (t) => t._id === over.id
+                );
+                const updated = [...section.tasks];
+                updated.splice(overIndex, 0, movedTask!);
+                return {
+                    ...section,
+                    tasks: updated,
+                };
+            }
+            return section;
+        });
 
-        const updatedSourceTasks = [...sourceSection.tasks];
-        const updatedTargetTasks = [...targetSection.tasks];
-
-        const [movedTask] = updatedSourceTasks.splice(activeTaskIndex, 1);
-        updatedTargetTasks.splice(overTaskIndex, 0, movedTask);
-
-        const newData = [...data];
-        newData[sourceSectionIndex].tasks = updatedSourceTasks;
-        newData[targetSectionIndex].tasks = updatedTargetTasks;
         setData(newData);
 
         try {
             await taskApi.updatePosition(boardId, {
                 resourceColumnId: sourceSection._id,
-                destinationColumnId: targetSection._id,
-                resourceList: updatedSourceTasks,
-                destinationList: updatedTargetTasks,
+                destinationColumnId: destinationSection._id,
+                resourceList:
+                    newData.find((s) => s._id === sourceSection._id)?.tasks ??
+                    [],
+                destinationList:
+                    newData.find((s) => s._id === destinationSection._id)
+                        ?.tasks ?? [],
             });
         } catch {
             alert("Failed to update task position");
@@ -133,13 +146,24 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
     };
 
     const updateTaskTitle = async (taskId: string, newTitle: string) => {
-    try {
-        await taskApi.update(boardId, taskId, { title: newTitle });
-    } catch {
-        alert("Failed to update task title");
-    }
-};
-
+        try {
+            const updatedTask = await taskApi.update(boardId, taskId, {
+                title: newTitle,
+            });
+            // Optionally update the state with the backend response
+            setData((prevData) =>
+                prevData.map((section) => {
+                    if (section._id !== updatedTask.board) return section;
+                    const updatedTasks = section.tasks.map((task) =>
+                        task._id === updatedTask._id ? updatedTask : task
+                    );
+                    return { ...section, tasks: updatedTasks };
+                })
+            );
+        } catch {
+            alert("Failed to update task title");
+        }
+    };
 
     async function createTask(sectionId: string) {
         try {
@@ -176,31 +200,31 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                     onClose={() => setTitleModalOpen(false)}
                     onSave={async (newTitle) => {
                         if (!taskToEdit) return;
-                    
-                        // 1. Optimistically update local data
-                        const updatedData = data.map((section) => {
-                            if (section._id !== taskToEdit.board) return section;
-                            return {
-                                ...section,
-                                tasks: section.tasks.map((task) =>
+
+                        setData((prevData) =>
+                            prevData.map((section) => {
+                                if (section._id !== taskToEdit.board)
+                                    return section;
+
+                                const updatedTasks = section.tasks.map((task) =>
                                     task._id === taskToEdit._id
-                                        ? { ...task, title: newTitle } // update the title directly
+                                        ? { ...task, title: newTitle }
                                         : task
-                                ),
-                            };
-                        });
-                    
-                        setData(updatedData);
-                    
-                        // 2. Backend update
-                        await updateTaskTitle(taskToEdit._id, newTitle);
-                    
-                        // 3. Important: Close the modal only AFTER updating local and backend state
-                        setTitleModalOpen(false);
-                        setTaskToEdit(null);
+                                );
+
+                                return { ...section, tasks: updatedTasks };
+                            })
+                        );
+
+                        // Send the update to the backend
+                        try {
+                            await updateTaskTitle(taskToEdit._id, newTitle);
+                            setTitleModalOpen(false);
+                            setTaskToEdit(null);
+                        } catch {
+                            alert("Failed to update task title");
+                        }
                     }}
-                    
-                    
                 />
             )}
             <DndContext

@@ -31,11 +31,9 @@ export interface UpdateBoardParams {
   position?: number;
 }
 
-// Types.ts (extend it with task-related types)
-
 export interface Task {
   _id: string;
-  board: string; // board ID
+  board: string;
   title: string;
   content?: string;
   position: number;
