@@ -3,7 +3,8 @@ import axios from 'axios';
 // query-string: Used to serialize query parameters in a cleaner way than the default axios serializer.
 import queryString from 'query-string';
 
-const baseUrl = 'http://127.0.0.1:5000/api/v1/';
+
+const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/v1/`;
 
 // getToken: Gets the stored token from localStorage (usually set during login) to be attached to all future requests for authorization.
 const getToken = () => localStorage.getItem('token');
