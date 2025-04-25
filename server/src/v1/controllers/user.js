@@ -29,8 +29,8 @@ exports.register = async (req, res) => {
       { expiresIn: '24h' }
     );
     // Responds with the user and token
-    res.status(201).json({ user, token })
-  } catch (err) {
+    res.status(200).json({ data: {user, token} })
+    } catch (err) {
     res.status(500).json(err)
   }
 }

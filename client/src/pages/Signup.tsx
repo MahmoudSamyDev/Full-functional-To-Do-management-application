@@ -13,7 +13,7 @@ function Signup() {
     const [passwordErrText, setPasswordErrText] = useState<string>("");
     const [confirmPasswordErrText, setConfirmPasswordErrText] = useState<string>("");
 
-    const handleSubmit = async (e: React.FormEvent<SignupForm>) => {
+    async function handleSubmit (e: React.FormEvent<SignupForm>) {
         e.preventDefault();
         setUsernameErrText("");
         setPasswordErrText("");
@@ -53,10 +53,12 @@ function Signup() {
                 password,
                 confirmPassword,
             });
+            console.log(res);
             setLoading(false);
-            localStorage.setItem("token", res.data.token);
-            navigate("/");
+            localStorage.setItem("token", res?.data?.token);
+            navigate("/login");
         } catch (err) {
+            console.log(err);
             const errors = (
                 err as { data: { errors: { param: string; msg: string }[] } }
             ).data.errors;

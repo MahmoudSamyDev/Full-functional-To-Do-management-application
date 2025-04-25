@@ -24,14 +24,16 @@ interface KanbanProps {
 }
 
 function Kanban({ boardId, data: initialSections }: KanbanProps) {
-    const [data, setData] = useState<Section[]>([]);
+    const [data, setData] = useState<Section[]>(initialSections);
     const [titleModalOpen, setTitleModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
+    // Only initialize data when initialSections changes and data is empty
     useEffect(() => {
-        setData(initialSections);
-    }, [initialSections]);
-
+        if (data.length === 0 && initialSections.length > 0) {
+            setData(initialSections);
+        }
+    }, [initialSections, data]);
 
     const createSection = async () => {
         try {
@@ -75,21 +77,30 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
 
     const updateTaskTitle = async (taskId: string, newTitle: string) => {
         try {
-            const updatedTask = await taskApi.update(boardId, taskId, {
-                title: newTitle,
-            });
+            // Optimistic update: Update the UI immediately
             setData((prevData) =>
-                prevData.map((section) => {
-                    if (section._id !== updatedTask.board) return section;
-                    const updatedTasks = section.tasks.map((task) =>
-                        task._id === updatedTask._id ? updatedTask : task
-                    );
-                    return { ...section, tasks: updatedTasks };
-                })
+                prevData.map((section) => ({
+                    ...section,
+                    tasks: section.tasks.map((task) =>
+                        task._id === taskId ? { ...task, title: newTitle } : task
+                    ),
+                }))
             );
+
+            // Send update to backend
+            await taskApi.update(boardId, taskId, { title: newTitle });
             return true;
         } catch {
+            // Revert optimistic update on failure
             alert("Failed to update task title");
+            setData((prevData) =>
+                prevData.map((section) => ({
+                    ...section,
+                    tasks: section.tasks.map((task) =>
+                        task._id === taskId ? { ...task, title: task.title } : task
+                    ),
+                }))
+            );
             return false;
         }
     };
@@ -110,7 +121,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
     }
 
     async function deleteTask(taskId: string) {
-        console.log("Deleting task with ID:", taskId);
         try {
             await taskApi.delete(boardId, taskId);
             setData((prevData) =>
@@ -156,77 +166,74 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                 />
             )}
             <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    width: "calc(100vw - 400px)",
+                    overflowX: "auto",
+                }}
+            >
+                {data.map((section) => (
+                    <Box
+                        key={section._id}
                         sx={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            width: "calc(100vw - 400px)",
-                            overflowX: "auto",
+                            minWidth: "300px",
+                            maxWidth: "300px",
+                            marginRight: "10px",
+                            padding: "10px",
+                            borderRadius: "8px",
                         }}
                     >
-                        {data.map((section) => (
-                            <Box
-                                key={section._id}
+                        <Box display="flex" alignItems="center" mb={1}>
+                            <TextField
+                                value={section.title}
+                                onChange={(e) =>
+                                    updateSectionTitle(e, section._id)
+                                }
+                                fullWidth
+                                placeholder="Untitled"
+                                variant="outlined"
                                 sx={{
-                                    minWidth: "300px",
-                                    maxWidth: "300px",
-                                    marginRight: "10px",
-                                    padding: "10px",
-                                    borderRadius: "8px",
+                                    "& .MuiOutlinedInput-input": {
+                                        padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-notchedOutline": {
+                                        border: "unset",
+                                    },
+                                    "& .MuiOutlinedInput-root": {
+                                        fontSize: "1rem",
+                                        fontWeight: "700",
+                                    },
                                 }}
+                            />
+                            <IconButton
+                                size="small"
+                                onClick={() => createTask(section._id)}
                             >
-                                <Box display="flex" alignItems="center" mb={1}>
-                                    <TextField
-                                        value={section.title}
-                                        onChange={(e) =>
-                                            updateSectionTitle(e, section._id)
-                                        }
-                                        fullWidth
-                                        placeholder="Untitled"
-                                        variant="outlined"
-                                        sx={{
-                                            "& .MuiOutlinedInput-input": {
-                                                padding: 0,
-                                            },
-                                            "& .MuiOutlinedInput-notchedOutline":
-                                                {
-                                                    border: "unset",
-                                                },
-                                            "& .MuiOutlinedInput-root": {
-                                                fontSize: "1rem",
-                                                fontWeight: "700",
-                                            },
-                                        }}
-                                    />
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => createTask(section._id)}
-                                    >
-                                        <AddOutlinedIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                            deleteSection(section._id)
-                                        }
-                                    >
-                                        <DeleteOutlinedIcon />
-                                    </IconButton>
-                                </Box>
+                                <AddOutlinedIcon />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                onClick={() => deleteSection(section._id)}
+                            >
+                                <DeleteOutlinedIcon />
+                            </IconButton>
+                        </Box>
 
-                                {section.tasks.map((task) => (
-                                    <SortableTaskCard
-                                        key={task._id}
-                                        task={task}
-                                        onEditTitle={(task) => {
-                                            setTaskToEdit(task);
-                                            setTitleModalOpen(true);
-                                        }}
-                                        onDelete={deleteTask}
-                                    />
-                                ))}
-                            </Box>
+                        {section.tasks.map((task) => (
+                            <SortableTaskCard
+                                key={task._id}
+                                task={task}
+                                onEditTitle={(task) => {
+                                    setTaskToEdit(task);
+                                    setTitleModalOpen(true);
+                                }}
+                                onDelete={deleteTask}
+                            />
                         ))}
                     </Box>
+                ))}
+            </Box>
         </>
     );
 }

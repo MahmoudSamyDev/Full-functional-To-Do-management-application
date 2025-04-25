@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, IconButton } from "@mui/material";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EditIcon from "@mui/icons-material/Edit";
 import { Task } from "../../api/Types";
 
 interface Props {
@@ -32,23 +33,31 @@ const SortableTaskCard = ({ task, onEditTitle, onDelete }: Props) => {
     };
 
     return (
-        <Card
-            ref={setNodeRef}
-            {...attributes}
-            sx={style}
-            onDoubleClick={() => onEditTitle(task)}
-        >
+        <Card ref={setNodeRef} {...attributes} sx={style}>
             <div {...listeners}>{task?.title ? task.title : "Untitled"}</div>
-            <IconButton
-                size="small"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    console.log("Delete button clicked for task ID:", task._id);
-                    onDelete(task._id);
-                }}
-            >
-                <DeleteOutlinedIcon />
-            </IconButton>
+            <div className="actions flex items-center gap-[10px]">
+                <IconButton
+                    size="small"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        console.log(
+                            "Delete button clicked for task ID:",
+                            task._id
+                        );
+                        onDelete(task._id);
+                    }}
+                >
+                    <DeleteOutlinedIcon />
+                </IconButton>
+                <IconButton
+                    size="small"
+                    onClick={() => {
+                        onEditTitle(task);
+                    }}
+                >
+                    <EditIcon />
+                </IconButton>
+            </div>
         </Card>
     );
 };

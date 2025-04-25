@@ -36,7 +36,6 @@ function Login() {
         setLoading(true);
 
         try {
-            console.log("Logging in...");
             const res = await authApi.login({ username, password });
             console.log(res);
             setLoading(false);
