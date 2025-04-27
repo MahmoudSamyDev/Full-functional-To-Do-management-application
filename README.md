@@ -234,6 +234,14 @@ The project is organized into two main directories: `client` (frontend) and `ser
 3. Open `http://localhost:5173` in your browser.
 4. Sign up or log in to start managing tasks.
 
+Note: You can run the appliation easily using docker compoose file, just make sure of your desigred enviromant variables, and than run command
+
+```
+sudo docker-compose up --build
+```
+
+and then, open the application and try it optimistiaclly.
+
 ## API Endpoints
 
 The backend provides RESTful API endpoints for authentication and task management. Below are key endpoints:
