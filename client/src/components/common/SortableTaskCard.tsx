@@ -1,5 +1,3 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { Card, IconButton } from "@mui/material";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
@@ -12,19 +10,10 @@ interface Props {
 }
 
 const SortableTaskCard = ({ task, onEditTitle, onDelete }: Props) => {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: task._id });
+
 
     const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
+
         marginBottom: "10px",
         padding: "10px",
         display: "flex",
@@ -33,8 +22,8 @@ const SortableTaskCard = ({ task, onEditTitle, onDelete }: Props) => {
     };
 
     return (
-        <Card ref={setNodeRef} {...attributes} sx={style}>
-            <div {...listeners}>{task?.title ? task.title : "Untitled"}</div>
+        <Card sx={style}>
+            <div>{task?.title ? task.title : "Untitled"}</div>
             <div className="actions flex items-center gap-[10px]">
                 <IconButton
                     size="small"
