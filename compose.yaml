@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+    client:
+        build:
+            context: ./client
+            dockerfile: Dockerfile
+            args:
+                - BASE_URL=http://server:5000/api
+        ports:
+            - "3000:80"
+        environment:
+            - BACKEND_URL=http://server:5000/api
+        depends_on:
+            - server
+        networks:
+            - task-manager-network
+        restart: unless-stopped
+
+    server:
+        build:
+            context: ./server
+            dockerfile: Dockerfile
+        ports:
+            - "5000:5000"
+        environment:
+            - PORT=5000
+            - MONGODB_URI=mongodb://admin:admin@mongodb:27017/task-manager?authSource=admin
+            - TOKEN_SECRET_KEY=${JWT_SECRET:-PJe6H6WYXolD4w==}
+            - PASSWORD_SECRET_KEY=${PASSWORD_SECRET:-PJe6H6WYXolD4w==}
+            - NODE_ENV=production
+        depends_on:
+            - mongodb
+        networks:
+            - task-manager-network
+        restart: unless-stopped
+
+    mongodb:
+        image: mongo:5
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=admin
+            - MONGO_INITDB_ROOT_PASSWORD=admin
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongodb-data:/data/db
+        networks:
+            - task-manager-network
+        restart: unless-stopped
+
+networks:
+    task-manager-network:
+        driver: bridge
+
+volumes:
+    mongodb-data:
+        name: mongodb-data
