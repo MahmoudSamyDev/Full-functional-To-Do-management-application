@@ -14,6 +14,7 @@ import sectionApi from "../../api/sectionApi";
 import taskApi from "../../api/taskApi";
 import { Section, Task } from "../../api/Types";
 import SortableTaskCard from "./SortableTaskCard";
+import DroppableSection from "./DroppableSection";
 
 // DND Imports
 import {
@@ -159,17 +160,22 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
     // ✨ MAIN DRAG HANDLER
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
-        if (!active || !over || active.id === over.id) return;
+        if (!active || !over) return;
+
+        const activeTaskId = active.id.toString();
+        const overId = over.id.toString();
 
         let sourceSectionId: string | null = null;
         let destinationSectionId: string | null = null;
 
-        // Find source and destination section IDs
         for (const section of data) {
-            if (section.tasks.find((task) => task._id === active.id)) {
+            if (section.tasks.find((task) => task._id === activeTaskId)) {
                 sourceSectionId = section._id;
             }
-            if (section.tasks.find((task) => task._id === over.id)) {
+            if (
+                section._id === overId || // 👈 handles drop on section container
+                section.tasks.find((task) => task._id === overId)
+            ) {
                 destinationSectionId = section._id;
             }
         }
@@ -177,7 +183,6 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         if (!sourceSectionId || !destinationSectionId) return;
 
         const updatedData = [...data];
-
         const sourceSection = updatedData.find(
             (s) => s._id === sourceSectionId
         )!;
@@ -186,10 +191,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         )!;
 
         const activeIndex = sourceSection.tasks.findIndex(
-            (task) => task._id === active.id
-        );
-        const overIndex = destinationSection.tasks.findIndex(
-            (task) => task._id === over.id
+            (task) => task._id === activeTaskId
         );
 
         const activeTask = sourceSection.tasks[activeIndex];
@@ -197,12 +199,15 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
         // Remove from source
         sourceSection.tasks.splice(activeIndex, 1);
 
-        // Insert into destination
+        let overIndex = destinationSection.tasks.findIndex(
+            (task) => task._id === overId
+        );
+
         if (sourceSectionId === destinationSectionId) {
-            // ✅ Reordering within the same section
+            if (overIndex < 0) overIndex = 0; // drop in empty section or end
             sourceSection.tasks.splice(overIndex, 0, activeTask);
         } else {
-            // ✅ Moving across sections
+            if (overIndex < 0) overIndex = destinationSection.tasks.length;
             destinationSection.tasks.splice(overIndex, 0, activeTask);
         }
 
@@ -261,6 +266,7 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                         alignItems: "flex-start",
                         width: "calc(100vw - 400px)",
                         overflowX: "auto",
+                        height: "70vh",
                     }}
                 >
                     {data.map((section) => (
@@ -309,23 +315,45 @@ function Kanban({ boardId, data: initialSections }: KanbanProps) {
                                     <DeleteOutlinedIcon />
                                 </IconButton>
                             </Box>
-                            <SortableContext
-                                id={section._id}
-                                items={section.tasks.map((task) => task._id)}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                {section.tasks.map((task) => (
-                                    <SortableTaskCard
-                                        key={task._id}
-                                        task={task}
-                                        onEditTitle={(task) => {
-                                            setTaskToEdit(task);
-                                            setTitleModalOpen(true);
-                                        }}
-                                        onDelete={deleteTask}
-                                    />
-                                ))}
-                            </SortableContext>
+                            <DroppableSection id={section._id}>
+                                <SortableContext
+                                    id={section._id}
+                                    items={section.tasks.map(
+                                        (task) => task._id
+                                    )}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    {section.tasks.length === 0 ? (
+                                        <Box
+                                            sx={{
+                                                height: "60px",
+                                                border: "2px dashed #ccc",
+                                                borderRadius: "4px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                color: "#aaa",
+                                                fontSize: "0.875rem",
+                                                fontStyle: "italic",
+                                            }}
+                                        >
+                                            Drop here
+                                        </Box>
+                                    ) : (
+                                        section.tasks.map((task) => (
+                                            <SortableTaskCard
+                                                key={task._id}
+                                                task={task}
+                                                onEditTitle={(task) => {
+                                                    setTaskToEdit(task);
+                                                    setTitleModalOpen(true);
+                                                }}
+                                                onDelete={deleteTask}
+                                            />
+                                        ))
+                                    )}
+                                </SortableContext>
+                            </DroppableSection>
                         </Box>
                     ))}
                 </Box>
