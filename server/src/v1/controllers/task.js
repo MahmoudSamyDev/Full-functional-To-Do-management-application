@@ -57,26 +57,26 @@ exports.updatePosition = async (req, res) => {
   } = req.body;
 
   try {
-    // If task was moved to another section, update its section + position
+    // ✅ Always update source section (same or cross)
+    for (let i = 0; i < resourceList.length; i++) {
+      await Task.findByIdAndUpdate(resourceList[i]._id, {
+        $set: {
+          section: resourceColumnId,
+          position: i
+        }
+      });
+    }
+
+    // ✅ Only update destination if it's different
     if (resourceColumnId !== destinationColumnId) {
-      for (let i = 0; i < resourceList.length; i++) {
-        await Task.findByIdAndUpdate(resourceList[i]._id, {
+      for (let i = 0; i < destinationList.length; i++) {
+        await Task.findByIdAndUpdate(destinationList[i]._id, {
           $set: {
-            section: resourceColumnId,
+            section: destinationColumnId,
             position: i
           }
         });
       }
-    }
-
-    // Always update destination positions
-    for (let i = 0; i < destinationList.length; i++) {
-      await Task.findByIdAndUpdate(destinationList[i]._id, {
-        $set: {
-          section: destinationColumnId,
-          position: i
-        }
-      });
     }
 
     res.status(200).json("updated");
@@ -84,3 +84,4 @@ exports.updatePosition = async (req, res) => {
     res.status(500).json(err);
   }
 };
+
