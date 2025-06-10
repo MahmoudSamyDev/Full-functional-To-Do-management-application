@@ -19,6 +19,7 @@ function Board() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [sections, setSections] = useState<Section[]>([]);
+    const [loading, setLoading] = useState(false);
 
     const boards = useSelector(
         (state: RootState) => state.board.value
@@ -26,14 +27,20 @@ function Board() {
 
     // Get all fetched board data
     useEffect(() => {
+        setSections([]);
+        setLoading(true);
+        setTitle("");
+        setDescription("");
         const getBoard = async () => {
             try {
                 const res = await boardApi.getOne(`${boardId}`);
-                setTitle(res.title);
-                setDescription(res.description || "");
-                setSections(res.sections || []);
+                setTitle(res?.title);
+                setDescription(res?.description || "");
+                setSections(res?.sections);
             } catch {
                 alert("Failed to fetch board data.");
+            } finally {
+                setLoading(false);
             }
         };
         getBoard();
@@ -141,7 +148,12 @@ function Board() {
                     />
                 </Box>
                 <Box>
-                    <Kanban data={sections} boardId={boardId!} />
+                    {/* Show loading or Kanban */}
+                    {loading ? (
+                        <div>Loading board...</div>
+                    ) : (
+                        <Kanban data={sections} boardId={boardId!} />
+                    )}
                 </Box>
             </Box>
         </>
