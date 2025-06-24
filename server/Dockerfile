@@ -16,7 +16,7 @@ COPY . .
 
 # Set environment variables (defaults, override with .env or Docker)
 ENV PORT=3000
-ENV MONGODB_URI=mongodb://admin:admin@localhost:27017/todos-app?authSource=admin
+ENV MONGODB_URI=mongodb://admin:admin@todo-app:27017/todos-app?authSource=admin
 ENV PASSWORD_SECRET_KEY=mahmoud@123
 ENV TOKEN_SECRET_KEY=mahmoud@123
 ENV JWT_SECRET=your_jwt_secret_key

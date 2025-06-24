@@ -166,9 +166,14 @@ The project is organized into two main directories: `client` (frontend) and `ser
 ### Pre-requisites
 -   **Docker installed on you machine**
 
+### 0. Create docker network
+```bash
+docker network create kanban-net
+```
+
 ### 1. Mongo database running
 ```bash
-sudo docker run --name todo-app -d -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo
+sudo docker run --name todo-app -d -p 27017:27017 --network kanban-net -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo
 ```
 
 ### 2. Running the mongo db container
@@ -178,12 +183,12 @@ sudo docker start todo-app
 
 ### 3. Back end ruuning
 ```bash
-docker run -p 3000:3000 mahmoudsamy2020/kanbanboard-back-end-project:0.0
+docker run -p 3000:3000 --network kanban-net --name kanban-backend mahmoudsamy2020/kanbanboard-back-end-project:0.0
 ```
 
 ### 4. Front end ruuning
 ```bash
-docker run -p 5000:5000 mahmoudsamy2020/kanbanboard-front-end-project:0.0
+docker run -p 5000:5000 --network kanban-net --name kanban-frontend mahmoudsamy2020/kanbanboard-front-end-project:0.0
 ```
 
 And start enjoying the demo.
