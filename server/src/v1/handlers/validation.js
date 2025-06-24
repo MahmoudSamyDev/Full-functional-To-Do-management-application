@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 
 // mongoose: Used here to validate MongoDB Object IDs
 const mongoose = require('mongoose')
-
+mongoose.set('strictQuery', false)
 exports.validate = (req, res, next) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {

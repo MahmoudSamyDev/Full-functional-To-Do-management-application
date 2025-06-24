@@ -162,7 +162,34 @@ The project is organized into two main directories: `client` (frontend) and `ser
 
 ```
 
-## Setup and Installation
+## Running the project demo [ Docker deplyment mode ]
+### Pre-requisites
+-   **Docker installed on you machine**
+
+### 1. Mongo database running
+```bash
+sudo docker run --name todo-app -d -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo
+```
+
+### 2. Running the mongo db container
+```bash
+sudo docker start todo-app
+```
+
+### 3. Back end ruuning
+```bash
+docker run -p 3000:3000 mahmoudsamy2020/kanbanboard-back-end-project:0.0
+```
+
+### 4. Front end ruuning
+```bash
+docker run -p 5000:5000 mahmoudsamy2020/kanbanboard-front-end-project:0.0
+```
+
+And start enjoying the demo.
+
+
+## Setup and Installation [ Development mode ]
 
 ### Prerequisites
 
@@ -172,7 +199,6 @@ The project is organized into two main directories: `client` (frontend) and `ser
 -   **npm** (8.x or higher)
 
 ### Backend Setup
-
 1.  Navigate to the `server` directory:
     ```bash
     cd server
@@ -183,7 +209,7 @@ The project is organized into two main directories: `client` (frontend) and `ser
     ```
 3.  Set up environment variables by creating a `.env` file in the `server` directory:
     ```
-    PORT=5000
+    PORT=3000
     MONGODB_URI=mongodb://admin:admin@localhost:27017/todos-app?authSource=admin
     PASSWORD_SECRET_KEY=myourr_Rodome_Pass123
     TOKEN_SECRET_KEY=yourr_Rodome_Pass@123
@@ -194,7 +220,6 @@ The project is organized into two main directories: `client` (frontend) and `ser
 
     ```bash
     sudo docker run --name todo-app -d -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo
-
     ```
 
 5.  Run the docker container:
@@ -209,7 +234,7 @@ The project is organized into two main directories: `client` (frontend) and `ser
     ```bash
     npm run start
     ```
-    The server will run on `http://localhost:5000`.
+    The server will run on `http://localhost:3000`.
 
 ### Frontend Setup
 
@@ -223,28 +248,20 @@ The project is organized into two main directories: `client` (frontend) and `ser
     ```
 3. Set up environment variables by creating a `.env` file in the `client` directory:
     ```
-    VITE_API_BASE_URL=http://localhost:5000/api
+    VITE_API_BASE_URL=http://localhost:3000/api
     ```
 4. Start the frontend development server:
     ```bash
     npm run dev
     ```
-    The app will be available at `http://localhost:5173` (or the port specified by Vite).
+    The app will be available at `http://localhost:5000` (or the port specified by Vite).
 
 ### Running the Application
-
 1. Ensure the backend server and MongoDB are running.
 2. Start the frontend development server.
-3. Open `http://localhost:5173` in your browser.
+3. Open `http://localhost:5000` in your browser.
 4. Sign up or log in to start managing tasks.
 
-Note: You can run the appliation easily using docker compoose file, just make sure of your desigred enviromant variables, and than run command
-
-```
-sudo docker-compose up --build
-```
-
-and then, open the application and try it optimistiaclly.
 
 ## API Endpoints
 

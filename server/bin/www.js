@@ -9,6 +9,8 @@ const debug = require('debug')('server:server');
 const http = require('http');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+mongoose.set('strictQuery', false)
+
 
 // Now here, we are going to use dotenv to load environment variables from a .env file into process.env
 dotenv.config();
